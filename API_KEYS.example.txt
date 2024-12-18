@@ -1,0 +1,27 @@
+# API Keys Configuration
+# Replace these example values with your actual API keys
+
+# OpenAI
+OPENAI_API_KEY=your-openai-api-key
+
+# Anthropic
+ANTHROPIC_API_KEY=your-anthropic-api-key
+
+# AWS
+AWS_ACCESS_KEY_ID=your-aws-access-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+AWS_REGION=your-aws-region
+
+# Google Cloud
+GOOGLE_CLOUD_API_KEY=your-google-cloud-api-key
+GOOGLE_APPLICATION_CREDENTIALS=path/to/credentials.json
+
+# Azure
+AZURE_API_KEY=your-azure-api-key
+AZURE_ENDPOINT=your-azure-endpoint
+
+# Replicate
+REPLICATE_API_TOKEN=your-replicate-token
+
+# Database
+DATABASE_URL=your-database-url

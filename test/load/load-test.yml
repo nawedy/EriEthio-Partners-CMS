@@ -1,0 +1,208 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - name: "Warm up"
+      duration: 60
+      arrivalRate: 5
+    - name: "Ramp up load"
+      duration: 120
+      arrivalRate: 5
+      rampTo: 50
+    - name: "Sustained load"
+      duration: 300
+      arrivalRate: 50
+    - name: "Peak load"
+      duration: 120
+      arrivalRate: 100
+    - name: "Scale down"
+      duration: 60
+      arrivalRate: 5
+
+  plugins:
+    metrics-by-endpoint: {}
+
+  defaults:
+    headers:
+      Content-Type: "application/json"
+      Accept: "application/json"
+
+scenarios:
+  - name: "User flow"
+    flow:
+      # Authentication
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "test@example.com"
+            password: "password123"
+          capture:
+            - json: "$.token"
+              as: "token"
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: token
+
+      # List assets
+      - get:
+          url: "/api/assets"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: items
+
+      # Create asset
+      - post:
+          url: "/api/assets"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            name: "Test Asset {{ $randomString() }}"
+            type: "text"
+          capture:
+            - json: "$.id"
+              as: "assetId"
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: id
+
+      # Update asset
+      - put:
+          url: "/api/assets/{{ assetId }}"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            name: "Updated Asset {{ $randomString() }}"
+          expect:
+            - statusCode: 200
+
+      # Generate AI content
+      - post:
+          url: "/api/ai/generate"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            prompt: "Test prompt"
+            model: "gpt-4"
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: result
+
+      # Create version
+      - post:
+          url: "/api/versions/{{ assetId }}"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            changes:
+              - type: "add"
+                path: "/test.txt"
+                content: "test content"
+          capture:
+            - json: "$.id"
+              as: "versionId"
+          expect:
+            - statusCode: 200
+
+      # Compare versions
+      - get:
+          url: "/api/versions/compare?version1={{ versionId }}&version2=latest"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: changes
+
+      # Get analytics
+      - get:
+          url: "/api/analytics/usage"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+            - contentType: json
+            - hasProperty: totalAssets
+
+      # Delete asset
+      - delete:
+          url: "/api/assets/{{ assetId }}"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+  - name: "Read-only flow"
+    flow:
+      # Authentication
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "readonly@example.com"
+            password: "password123"
+          capture:
+            - json: "$.token"
+              as: "token"
+
+      # List assets with pagination
+      - get:
+          url: "/api/assets?page=1&limit=10"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      # Search assets
+      - get:
+          url: "/api/assets/search?q=test"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+      # Get analytics
+      - get:
+          url: "/api/analytics/usage"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+  - name: "Error scenarios"
+    flow:
+      # Invalid login
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "invalid@example.com"
+            password: "wrongpassword"
+          expect:
+            - statusCode: 401
+
+      # Access without token
+      - get:
+          url: "/api/assets"
+          expect:
+            - statusCode: 401
+
+      # Invalid asset ID
+      - get:
+          url: "/api/assets/invalid-id"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 404
+
+      # Invalid request body
+      - post:
+          url: "/api/assets"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            invalid: "data"
+          expect:
+            - statusCode: 400
