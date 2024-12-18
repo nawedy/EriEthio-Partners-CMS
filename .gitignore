@@ -1,1 +1,8 @@
 node_modules
+
+# API Keys and Environment Variables
+.env
+.env.*
+!.env.example
+API_KEYS.txt
+**/API_KEYS.txt
