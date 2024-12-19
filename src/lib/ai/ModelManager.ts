@@ -3,6 +3,8 @@ import { Replicate } from 'replicate';
 import { StabilityClient } from 'stability-client';
 import { Configuration, OpenAIApi } from 'openai-edge';
 import { HuggingFaceInference } from '@huggingface/inference';
+import { AI_CONFIG } from '@/utils/ai-config';
+import { FEATURE_FLAGS } from '@/utils/ai-config';
 
 export type AIModel = {
   id: string;
@@ -26,19 +28,23 @@ export class ModelManager {
   private models: Map<string, AIModel>;
 
   constructor() {
+    if (!FEATURE_FLAGS.enableAI) {
+      throw new Error('AI features are disabled');
+    }
+
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: AI_CONFIG.openai.apiKey,
     });
 
     this.replicate = new Replicate({
-      auth: process.env.REPLICATE_API_TOKEN,
+      auth: AI_CONFIG.replicate.apiToken,
     });
 
     this.stability = new StabilityClient({
-      key: process.env.STABILITY_API_KEY,
+      key: AI_CONFIG.stability?.apiKey,
     });
 
-    this.huggingface = new HuggingFaceInference(process.env.HUGGINGFACE_API_KEY);
+    this.huggingface = new HuggingFaceInference(AI_CONFIG.huggingface.apiKey);
 
     this.models = new Map([
       ['dall-e-3', {

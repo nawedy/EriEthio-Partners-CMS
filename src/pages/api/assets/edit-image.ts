@@ -3,16 +3,18 @@ import { getSession } from 'next-auth/react';
 import OpenAI from 'openai';
 import { v2 as cloudinary } from 'cloudinary';
 import { PrismaClient } from '@prisma/client';
+import { AI_CONFIG } from '@/utils/ai-config';
+import env from '@/utils/env';
 
 const prisma = new PrismaClient();
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: AI_CONFIG.openai.apiKey,
 });
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: env.CLOUDINARY_CLOUD_NAME,
+  api_key: env.CLOUDINARY_API_KEY,
+  api_secret: env.CLOUDINARY_API_SECRET,
 });
 
 export default async function handler(

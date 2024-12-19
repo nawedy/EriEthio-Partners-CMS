@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import OpenAI from 'openai';
+import { AI_CONFIG } from '@/utils/ai-config';
 
 interface UsageMetrics {
   totalAssets: number;
@@ -47,7 +48,7 @@ export class AnalyticsManager {
   constructor() {
     this.prisma = new PrismaClient();
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: AI_CONFIG.openai.apiKey,
     });
   }
 

@@ -4,6 +4,8 @@ import { Anthropic } from '@anthropic-ai/sdk';
 import { HuggingFaceInference } from '@huggingface/inference';
 import { StabilityClient } from 'stability-client';
 import { Replicate } from 'replicate';
+import { AI_CONFIG } from '@/utils/ai-config';
+import { FEATURE_FLAGS } from '@/utils/ai-config';
 
 interface ModelCapability {
   type: 'text' | 'image' | 'video' | 'audio' | 'multimodal';
@@ -102,24 +104,28 @@ export class AdvancedModelManager {
   };
 
   constructor() {
+    if (!FEATURE_FLAGS.enableAI) {
+      throw new Error('AI features are disabled');
+    }
+
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: AI_CONFIG.openai.apiKey,
     });
 
-    this.gemini = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');
+    this.gemini = new GoogleGenerativeAI(AI_CONFIG.google.apiKey);
 
     this.anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY || '',
+      apiKey: AI_CONFIG.anthropic.apiKey,
     });
 
-    this.huggingface = new HuggingFaceInference(process.env.HUGGINGFACE_API_KEY);
+    this.huggingface = new HuggingFaceInference(AI_CONFIG.huggingface.apiKey);
 
     this.stability = new StabilityClient({
-      key: process.env.STABILITY_API_KEY || '',
+      key: AI_CONFIG.stability?.apiKey,
     });
 
     this.replicate = new Replicate({
-      auth: process.env.REPLICATE_API_TOKEN || '',
+      auth: AI_CONFIG.replicate.apiToken,
     });
   }
 
